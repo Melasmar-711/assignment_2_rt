@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # import ros stuff
 import rospy
@@ -28,7 +28,7 @@ yaw_precision_ = math.pi / 9  # +/- 20 degree allowed
 yaw_precision_2_ = math.pi / 90  # +/- 2 degree allowed
 dist_precision_ = 0.3
 
-kp_a = 3.0  # In ROS Noetic, it may be necessary to change the sign of this proportional controller
+kp_a = -0.6  # In ROS Noetic, it may be necessary to change the sign of this proportional controller
 kp_d = 0.2
 ub_a = 0.6
 lb_a = -0.5
@@ -78,6 +78,8 @@ def normalize_angle(angle):
     if(math.fabs(angle) > math.pi):
         angle = angle - (2 * math.pi * angle) / (math.fabs(angle))
     return angle
+
+
 
 
 def fix_yaw(des_pos):
