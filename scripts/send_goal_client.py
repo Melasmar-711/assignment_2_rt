@@ -28,17 +28,20 @@ class SendGoalClient:
 
 
     
-    def client_ui(self):
+    def client_ui(self,i):
         while True:
             goal = PlanningGoal()
-            wish = input_with_timeout('Enter a new goal x,y or the letter "c" for cancel: ',10)
+            wish = input_with_timeout('\nEnter a new goal x,y or the letter "c" for cancel: ',10)
 
             if wish == 'c':
                 self.client.cancel_goal()
-                print("Goal cancelled.")
+                print("\nGoal cancelled.")
                 return
-            if wish is None:
-                print("No input received.")
+            if wish is None and i == 1:
+                print("\nNo input received.\n")
+                continue
+            if wish is None and i != 1:
+                print("\nNo input received.\n")
                 return
             
             try:
@@ -48,14 +51,14 @@ class SendGoalClient:
                 self.send_goal(goal)
 
             except ValueError:
-                print("Invalid input. Please enter coordinates in the format 'x,y' or 'c' to cancel.")
+                print("\nInvalid input.")
                 continue
 
         
     def check_feedback(self, feedback):
         print('Feedback received:', feedback.stat)
         print('Actual pose:', feedback.actual_pose)
-        self.client_ui()
+        self.client_ui(0)
 
 
     def cancel_goal(self):
@@ -68,7 +71,7 @@ def main():
     rospy.init_node('send_goal_client')
     client = SendGoalClient()
     while not rospy.is_shutdown():
-        client.client_ui()
+        client.client_ui(1)
         rospy.spin()
 
 
