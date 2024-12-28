@@ -117,11 +117,13 @@ def planning(goal):
             done()
             break
         elif err_pos < 0.5:
+            #act_s.set_succeeded(result)
             change_state(2)
             feedback.stat = "Target reached!"
             feedback.actual_pose = pose_
             act_s.publish_feedback(feedback)
             done()
+            
             break       
         elif regions_ == None:
             continue
