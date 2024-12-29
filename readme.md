@@ -33,7 +33,7 @@
 
 ### **Adjustments to forked Repository**
 1. **robot2_laser.gazebo**
-- Modified the Laser sensor Plugin from `<plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_gpu_laser.so">` to `      <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">` because it didn't work on my machine and outputed the wrong ranges which caused the robot to keep rotating around itself and no laser scan was visible in Rviz
+- Modified the Laser sensor Plugin from `<plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_gpu_laser.so">` to `<plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">` because it didn't work on my machine and outputed the wrong ranges which caused the robot to keep rotating around itself and no laser scan was visible in Rviz
 
 ## **Installation and running**
 - **Dependencies:**
@@ -47,7 +47,7 @@
   cd ..
   catkin_make
 
-```
+	```
 
 
 ## Simulation Output
