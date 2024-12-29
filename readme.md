@@ -48,9 +48,6 @@
   	cd ..
   	catkin_make
   	roslaunch assignment_2_2024 assignment1.launch
-	
-
-
 ## Simulation Output
 <br/>
 
