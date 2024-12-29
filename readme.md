@@ -41,11 +41,13 @@
   - tkinter
 
 - **steps:**
+  - `sudo apt install python3-tk`
   - `cd <catkin_workspace>/src`
   - ```bash
   	git clone https://github.com/Melasmar-711/assignment_2_rt.git
   	cd ..
-  	catkin_make```
+  	catkin_make
+  	roslaunch assignment_2_2024 assignment1.launch
 	
 
 
