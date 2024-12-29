@@ -42,12 +42,11 @@
 
 - **steps:**
   - `cd <catkin_workspace>/src`
-  - ```ruby
-  git clone https://github.com/Melasmar-711/assignment_2_rt.git
-  cd ..
-  catkin_make
-
-	```
+  - ```bash
+  	git clone https://github.com/Melasmar-711/assignment_2_rt.git
+  	cd ..
+  	catkin_make```
+	
 
 
 ## Simulation Output
