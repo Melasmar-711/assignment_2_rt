@@ -1,6 +1,5 @@
 geometry_msgs/PoseStamped target_pose
 ---
-bool success
 ---
 geometry_msgs/Pose actual_pose
 string stat
