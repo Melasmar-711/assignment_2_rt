@@ -5,6 +5,8 @@ from assignment_2_2024.msg import PlanningAction, PlanningGoal
 from assignment_2_2024.msg import PoseVel
 from assignment_2_2024.srv import GetLastGoal, GetLastGoalResponse
 from nav_msgs.msg import Odometry
+import tkinter as tk
+from tkinter import messagebox
 import math
 import sys
 import select
@@ -67,6 +69,46 @@ class SendGoalClient:
 
 
 
+
+class GoalGUI:
+    def __init__(self, root, client):
+        self.client = client
+        self.root = root
+        self.root.title("Robot Goal Controller")
+
+        # Input fields
+        tk.Label(root, text="Goal X:").grid(row=0, column=0, padx=5, pady=5)
+        self.x_entry = tk.Entry(root)
+        self.x_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Label(root, text="Goal Y:").grid(row=1, column=0, padx=5, pady=5)
+        self.y_entry = tk.Entry(root)
+        self.y_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        # Buttons
+        self.send_button = tk.Button(root, text="Send Goal", command=self.send_goal)
+        self.send_button.grid(row=2, column=0, padx=5, pady=5)
+
+        self.cancel_button = tk.Button(root, text="Cancel Goal", command=self.cancel_goal)
+        self.cancel_button.grid(row=2, column=1, padx=5, pady=5)
+
+
+
+    def send_goal(self):
+        """Send the goal using the client."""
+        try:
+            x = float(self.x_entry.get())
+            y = float(self.y_entry.get())
+            self.client.send_goal(x, y)
+            messagebox.showinfo("Success", f"Goal sent: x={x}, y={y}")
+        except ValueError:
+            messagebox.showerror("Error", "Please enter valid numeric values for X and Y.")
+
+    def cancel_goal(self):
+        """Cancel the current goal."""
+        self.client.cancel_goal()
+        messagebox.showinfo("Cancelled", "Goal cancelled.")
+
 class OdomPublisher:
     def __init__(self):
 
@@ -92,16 +134,15 @@ class OdomPublisher:
 
 def main():
     rospy.init_node('send_goal_client')
-    client = SendGoalClient()
     odom_publisher = OdomPublisher()
-    
-    client.client_ui(1)
+    client = SendGoalClient()
 
-    while not rospy.is_shutdown():
-        
-        client.client_ui(0)
-        rospy.spin()
+    # Create GUI
+    root = tk.Tk()
+    gui = GoalGUI(root, client)
 
+    # Run the GUI main loop
+    root.mainloop()
 
 
 
