@@ -20,7 +20,8 @@ def get_last_goal():
 
 def main():
     rospy.init_node('last_goal_client')
-    rospy.loginfo("Press 'Enter' to request the last goal coordinates or type 'q' to quit.")
+    rospy.loginfo("LAST\tTARGET\tSERVICE")
+    rospy.loginfo("To request the last goal press \"Enter\"  and 'q' to quit.")
     
     while not rospy.is_shutdown():
         user_input = input("Enter your choice: ").strip()
