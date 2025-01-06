@@ -40,6 +40,7 @@
   - ROS Noetic
   - tkinter
 
+- **make sure all scripts and launch files are executable after cloning**
 - **steps:**
   - `sudo apt install python3-tk`
   - `cd <catkin_workspace>/src`
