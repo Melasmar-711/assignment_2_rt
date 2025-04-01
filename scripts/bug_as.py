@@ -152,6 +152,7 @@ def planning(goal):
         rate.sleep()
     
     if success:
+        result.outcome="Donee"
         rospy.loginfo('Goal: Succeeded!')
         act_s.set_succeeded(result)
     

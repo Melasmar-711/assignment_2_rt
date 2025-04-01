@@ -1,7 +1,24 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
+
+"""
+ROS Action Client for Robot Goal Navigation with GUI Interface
+
+This module provides:
+1. An action client for sending navigation goals to a ROS action server
+2. A Tkinter-based GUI for user interaction
+3. A custom odometry publisher that reformats standard odom messages
+4. A service to retrieve the last sent goal
+
+.. module:: send_goal_client
+   :platform: Unix
+   :synopsis: ROS action client with GUI for robot navigation control
+
+.. moduleauthor:: Mahmoud_Elasmar <s5927704@studenti.unige.it>
+"""
+
 import rospy
 import actionlib
-from assignment_2_2024.msg import PlanningAction, PlanningGoal
+from assignment_2_2024.msg import PlanningAction, PlanningGoal, PlanningResult
 from assignment_2_2024.msg import PoseVel
 from assignment_2_2024.srv import GetLastGoal, GetLastGoalResponse
 from nav_msgs.msg import Odometry
@@ -12,16 +29,51 @@ import sys
 import select
 
 def input_with_timeout(prompt, timeout):
-    print(prompt,'\n')
+    """
+    Get user input with a timeout period.
+    
+    Parameters
+    ----------
+    prompt : str
+        The message to display to the user
+    timeout : float
+        Timeout period in seconds
+        
+    Returns
+    -------
+    str or None
+        User input if received within timeout, otherwise None
+    """
+    print(prompt, '\n')
     input_ready, _, _ = select.select([sys.stdin], [], [], timeout)
     if input_ready:
         return sys.stdin.readline().strip()
     else:
         return None  # Timeout occurred
-    
 
 class SendGoalClient:
+    """
+    ROS Action Client for sending navigation goals to a robot.
+    
+    This class handles communication with the action server, maintains goal state,
+    and provides a service to query the last sent goal.
+    
+    Attributes
+    ----------
+    client : actionlib.SimpleActionClient
+        ROS action client for sending goals
+    last_goal_x : float or None
+        X coordinate of last sent goal
+    last_goal_y : float or None
+        Y coordinate of last sent goal
+    last_goal_service : rospy.Service
+        Service to retrieve last goal coordinates
+    action_result : PlanningResult
+        Stores the result of the last action
+    """
+    
     def __init__(self):
+        """Initialize the action client and service."""
         rospy.loginfo("Waiting for action server...")
         self.client = actionlib.SimpleActionClient('/reaching_goal', PlanningAction)
         self.client.wait_for_server()
@@ -32,10 +84,21 @@ class SendGoalClient:
         self.last_goal_y = None
 
         # Service to provide the last goal
-        self.last_goal_service = rospy.Service('/get_last_goal', GetLastGoal, self.handle_last_goal_request)
+        self.last_goal_service = rospy.Service(
+            '/get_last_goal', GetLastGoal, self.handle_last_goal_request)
+        self.action_result = PlanningResult()
 
     def send_goal(self, x, y):
-        """Send a goal to the action server."""
+        """
+        Send a navigation goal to the action server.
+        
+        Parameters
+        ----------
+        x : float
+            Target x-coordinate in meters
+        y : float
+            Target y-coordinate in meters
+        """
         goal = PlanningGoal()
         goal.target_pose.pose.position.x = x
         goal.target_pose.pose.position.y = y
@@ -43,35 +106,93 @@ class SendGoalClient:
         self.last_goal_x = x
         self.last_goal_y = y
 
-        self.client.send_goal(goal, feedback_cb=self.check_feedback)
+        self.client.send_goal(
+            goal, 
+            feedback_cb=self.check_feedback,
+            done_cb=self.check_done)
         rospy.loginfo(f"Goal sent: x={x}, y={y}")
 
     def cancel_goal(self):
-        """Cancel the current goal."""
+        """Cancel the current active goal."""
         self.client.cancel_goal()
-        self.last_goal_x = 10000
+        self.last_goal_x = 10000  # Special value indicating cancelled
         self.last_goal_y = 10000
         rospy.loginfo("Goal cancelled.")
 
     def check_feedback(self, feedback):
-        """Feedback callback from the action server."""
+        """
+        Callback for receiving feedback from the action server.
+        
+        Parameters
+        ----------
+        feedback : PlanningFeedback
+            Feedback message containing current robot state
+        """
         rospy.loginfo("Feedback received:")
         rospy.loginfo(f"Current state: {feedback.stat}")
         rospy.loginfo(f"Actual pose: {feedback.actual_pose}")
 
+    def check_done(self, state, res):
+        """
+        Callback for when goal completes.
+        
+        Parameters
+        ----------
+        state : int
+            Final state of the goal
+        res : PlanningResult
+            Result message from the action server
+        """
+        self.action_result = res
+        rospy.loginfo(f"Action completed with result: {res}")
+    
     def handle_last_goal_request(self, req):
-        """Service callback to return the last goal."""
+        """
+        Service handler for last goal request.
+        
+        Parameters
+        ----------
+        req : GetLastGoalRequest
+            Empty service request
+            
+        Returns
+        -------
+        GetLastGoalResponse
+            Contains last goal coordinates (x,y)
+        """
         if self.last_goal_x is None or self.last_goal_y is None:
             rospy.loginfo("No goal set yet.")
             return GetLastGoalResponse(x=float('nan'), y=float('nan'))
         rospy.loginfo(f"Providing last goal: x={self.last_goal_x}, y={self.last_goal_y}")
         return GetLastGoalResponse(x=self.last_goal_x, y=self.last_goal_y)
 
-
-
-
 class GoalGUI:
+    """
+    Tkinter GUI for interacting with the goal client.
+    
+    Attributes
+    ----------
+    client : SendGoalClient
+        The action client instance
+    root : tk.Tk
+        Main application window
+    x_entry : tk.Entry
+        Entry field for X coordinate
+    y_entry : tk.Entry
+        Entry field for Y coordinate
+    """
+    
     def __init__(self, root, client):
+        """
+        Initialize the GUI components.
+        
+        Parameters
+        ----------
+        root : tk.Tk
+            Root window
+        client : SendGoalClient
+            Action client instance
+        """
         self.client = client
         self.root = root
         self.root.title("Robot Goal Controller")
@@ -86,23 +207,24 @@ class GoalGUI:
         self.y_entry.grid(row=1, column=1, padx=5, pady=5)
 
         # Buttons
-        self.send_button = tk.Button(root, text="Send Goal", command=self.send_goal)
+        self.send_button = tk.Button(
+            root, text="Send Goal", command=self.send_goal)
         self.send_button.grid(row=2, column=0, padx=5, pady=5)
 
-        self.cancel_button = tk.Button(root, text="Cancel Goal", command=self.cancel_goal)
+        self.cancel_button = tk.Button(
+            root, text="Cancel Goal", command=self.cancel_goal)
         self.cancel_button.grid(row=2, column=1, padx=5, pady=5)
 
-
-
     def send_goal(self):
-        """Send the goal using the client."""
+        """Send goal using values from the entry fields."""
         try:
             x = float(self.x_entry.get())
             y = float(self.y_entry.get())
             self.client.send_goal(x, y)
             messagebox.showinfo("Success", f"Goal sent: x={x}, y={y}")
         except ValueError:
-            messagebox.showerror("Error", "Please enter valid numeric values for X and Y.")
+            messagebox.showerror(
+                "Error", "Please enter valid numeric values for X and Y.")
 
     def cancel_goal(self):
         """Cancel the current goal."""
@@ -110,8 +232,17 @@ class GoalGUI:
         messagebox.showinfo("Cancelled", "Goal cancelled.")
 
 class OdomPublisher:
+    """
+    Custom odometry publisher that reformats standard odometry messages.
+    
+    Attributes
+    ----------
+    pub : rospy.Publisher
+        Publisher for custom PoseVel messages
+    """
+    
     def __init__(self):
-
+        """Initialize publisher and subscriber."""
         # Publisher for the custom message
         self.pub = rospy.Publisher('/custom_odom', PoseVel, queue_size=10)
 
@@ -119,6 +250,14 @@ class OdomPublisher:
         rospy.Subscriber('/odom', Odometry, self.odom_callback)
 
     def odom_callback(self, msg):
+        """
+        Callback for processing odometry messages.
+        
+        Parameters
+        ----------
+        msg : Odometry
+            Standard ROS odometry message
+        """
         # Create a custom message instance
         custom_msg = PoseVel()
 
@@ -131,8 +270,8 @@ class OdomPublisher:
         # Publish the custom message
         self.pub.publish(custom_msg)
 
-
 def main():
+    """Main function to initialize ROS node and GUI."""
     rospy.init_node('send_goal_client')
     odom_publisher = OdomPublisher()
     client = SendGoalClient()
@@ -143,9 +282,6 @@ def main():
 
     # Run the GUI main loop
     root.mainloop()
-
-
-
 
 if __name__ == '__main__':
     main()
