@@ -5,8 +5,8 @@
 
 RT2_assignment1 documentation
 =============================
-`GitHub https://github.com/Melasmar-711/assignment_2_rt/tree/RT2_assignment1`
 
+- `GitHub <https://github.com/Melasmar-711/assignment_2_rt/tree/RT2_assignment1>`_
 
 
 .. toctree::
